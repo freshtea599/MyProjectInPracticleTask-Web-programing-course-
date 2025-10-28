@@ -1,0 +1,113 @@
+@import "./bootstrap/css/bootstrap.css";
+@import "./bootstrap-icons/bootstrap-icons.css";
+
+body {
+  background-color: #f8f9fa;
+  padding-top: 20px;
+}
+
+.avatar {
+  width: 180px;         
+  height: 180px;         
+  object-fit: cover;    
+  border-radius: 50%;   
+  display: block;
+  margin: 0 auto;        
+  border: 4px solid #f0f0f0; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05); 
+}
+
+.card {
+  min-height: 380px;  
+  padding: 20px;
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+}
+
+.avatar-post {
+  margin-top: 1rem;
+  font-size: 1.6rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.avatar-text {
+  color: rgb(100, 100, 100);
+  font-size: 1.1rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+body {
+  background: linear-gradient(135deg, #fffdf9, #f8e7d0);
+  font-family: "Segoe UI", sans-serif;
+}
+
+.carousel img {
+  max-height: 500px;
+  object-fit: cover;
+}
+
+.review-card {
+  max-width: 700px;
+  background: #ffffff;
+}
+
+.carousel-control-prev-icon {
+    background-color: black;
+}
+
+.carousel-control-next-icon {
+    background-color: black;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #f1f1f1;
+    text-align: center;
+    padding: 0;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+.bottom-slide {
+    bottom: 40px;
+}
+
+.feedback {
+    text-align: center;
+}
+
+.product-image { 
+width: 100%; 
+border-radius: 0.5rem; 
+border: 1px solid rgb(210, 210, 210); 
+}
+.product-name { 
+font-size: 1.4rem; 
+}
+.product-description { 
+font-size: 1.1rem;
+color: rgb(60, 60, 60); 
+}
+.product-price { 
+padding: 0.5rem; 
+border-radius: 0.5rem;
+border: 1px solid rgb(210, 210, 210); 
+margin: 0 1rem;
+}
+.card {
+    min-height: 180px;
+}
