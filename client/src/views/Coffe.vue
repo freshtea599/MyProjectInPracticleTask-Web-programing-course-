@@ -84,12 +84,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+import ingg1 from '../assets/image/slide-1.png';
+import ingg2 from '../assets/image/slide-2.png';
+import ingg3 from '../assets/image/slide-3.jpg';
 
 const slides = [
-  { img: '../assets/image/slide-1.png', src: '../assets/image/slide-1.png', alt: 'Слайд 1' },
-  { img: '../assets/image/slide-2.png', alt: 'Слайд 2' },
-  { img: '../assets/image/slide-3.jpg', alt: 'Слайд 3' }
+  { img: ingg1, alt: 'Слайд 1' },
+  { img: ingg2, alt: 'Слайд 2' },
+  { img: ingg3, alt: 'Слайд 3' }
 ]
 const currentSlide = ref(0)
 
