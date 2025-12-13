@@ -49,7 +49,7 @@
 ### Шаг 1. Клонирование репозитория
 
 ```bash
-git clone <url-репозитория>
+git clone <https://github.com/freshtea599/MyProjectInPracticleTask-Web-programing-course-.git>
 cd server
 ```
 
@@ -92,7 +92,7 @@ psql -U postgres -d aitikofeynya -f schema.sql
 ### Шаг 6. Файл `.env`
 
 ```env
-DATABASE_URL="postgres://postgres:postgres@localhost:5432/aitikofeynya?sslmode=disable"
+DATABASE_URL="postgres://postgres:_Vash_Porol_@localhost:5432/todolist?sslmode=disable"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production-min-32-chars"
 PORT=8080
 ```
@@ -111,7 +111,7 @@ UPDATE users SET role = 'admin' WHERE username = 'testuser';
 ### Шаг 8. Запуск сервера
 
 ```bash
-go run main_secure.go
+go run main.go
 ```
 
 Проверка:
