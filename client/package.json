@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "sass": "^1.93.2",
     "sass-loader": "^16.0.5",
     "sweetalert2": "^11.23.0",

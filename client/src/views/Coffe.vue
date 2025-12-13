@@ -5,11 +5,11 @@
       <p class="lead text-muted">
         Добро пожаловать в лучшее место на планете земля! <br>
         Ведь у нас вы можете не только взбодриться кофейком, но и научиться парочке классных айти штучек, все наши посетители славятся своими hard-скиллами.
-        К примеру, этот сайт, сделал человек купивший "Быстрый-Скилл-Капучино" и сверстал сайт за 2 минуты. Купи и ты, чтобы всё почувствовать на себе!
+        К примеру, этот сайт сделал человек, купивший "Быстрый-Скилл-Капучино", и сверстал сайт за 2 минуты. Купи и ты, чтобы всё почувствовать на себе!
       </p>
     </div>
 
-    <!-- Картинки -->
+    <!-- Слайдер картинок -->
     <div class="carousel slide shadow rounded overflow-hidden mb-5">
       <!-- Индикаторы -->
       <div class="carousel-indicators mb-0">
@@ -42,57 +42,71 @@
       </button>
     </div>
 
-    <h2 class="mt-5 feedback">Отзывы наших гостей</h2>
-    <div class="reviews-carousel position-relative mb-5">
+    <!-- Единый блок отзывов -->
+    <h2 class="mt-5 feedback text-center">Отзывы наших гостей</h2>
+
+    <div class="reviews-carousel position-relative mb-5 text-center">
       <div
-        v-for="(review, idx) in reviews"
-        :key="idx"
-        :class="['carousel-item text-center p-4', { active: idx === currentReview }]"
+        v-if="allReviews.length === 0"
+        class="p-4 text-muted"
+      >
+        Отзывов пока нет. Будьте первым!
+      </div>
+
+      <div
+        v-else
+        v-for="(review, idx) in allReviews"
+        :key="review.id || `static-${idx}`"
+        :class="['carousel-item p-4', { active: idx === currentReview }]"
         v-show="idx === currentReview"
       >
         <i class="bi bi-person-circle" style="font-size:2rem;"></i>
-        <h5 class="mt-2">{{ review.name }}</h5>
+        <h5 class="mt-2">{{ review.username }}</h5>
         <p>
           <span class="text-warning">
-            <i v-for="star in review.stars" :key="star" class="bi bi-star-fill"></i>
+            <i v-for="star in review.rating" :key="star" class="bi bi-star-fill"></i>
           </span>
         </p>
-        <p>{{ review.text }}</p>
+        <p class="lead fst-italic">"{{ review.comment }}"</p>
+        <small v-if="review.created_at" class="text-muted d-block mt-2">
+          {{ new Date(review.created_at).toLocaleDateString('ru-RU') }}
+        </small>
       </div>
+
       <button
+        v-if="allReviews.length > 1"
         @click="prevReview"
         type="button"
         class="carousel-control-prev"
-        style="top:50%;left:16px;transform:translateY(-50%);position:absolute;"
-        aria-label="Предыдущий"
+        style="top:50%;left:0;transform:translateY(-50%);position:absolute;"
       >
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Предыдущий</span>
       </button>
       <button
+        v-if="allReviews.length > 1"
         @click="nextReview"
         type="button"
         class="carousel-control-next"
-        style="top:50%;right:16px;transform:translateY(-50%);position:absolute;"
-        aria-label="Следующий"
+        style="top:50%;right:0;transform:translateY(-50%);position:absolute;"
       >
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Следующий</span>
       </button>
     </div>
   </main>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import ingg1 from '../assets/image/slide-1.png';
-import ingg2 from '../assets/image/slide-2.png';
-import ingg3 from '../assets/image/slide-3.jpg';
+import { ref, computed, onMounted } from 'vue'
+import api from '../axios'
+import ingg1 from '../assets/image/slide-1.png'
+import ingg2 from '../assets/image/slide-2.png'
+import ingg3 from '../assets/image/slide-3.jpg'
 
+// --- СЛАЙДЕР ---
 const slides = [
   { img: ingg1, alt: 'Слайд 1' },
   { img: ingg2, alt: 'Слайд 2' },
-  { img: ingg3, alt: 'Слайд 3' }
+  { img: ingg3, alt: 'Слайд 3' },
 ]
 const currentSlide = ref(0)
 
@@ -106,40 +120,77 @@ function nextSlide() {
   currentSlide.value = (currentSlide.value + 1) % slides.length
 }
 
-const reviews = [
+// --- СТАТИЧНЫЕ ОТЗЫВЫ ---
+const staticReviews = [
   {
-    name: 'Алексей Петров',
-    stars: 5,
-    text: "Выпил Латте 'Bug-Fix' — и баги исчезли сами собой! Теперь думаю, не открыть ли филиал этой кофейни прямо у себя в офисе?"
+    username: 'Алексей Петров',
+    rating: 5,
+    comment:
+      "Выпил Латте 'Bug-Fix' — и баги исчезли сами собой! Теперь думаю, не открыть ли филиал этой кофейни прямо у себя в офисе?",
   },
   {
-    name: 'Мария Иванова',
-    stars: 4,
-    text: "Эспрессо 'Джун-На-Стероидах' помог понять, что я уже почти Middle! Правда, кот дома теперь требует кофеиновые апдейты каждое утро."
+    username: 'Мария Иванова',
+    rating: 4,
+    comment:
+      "Эспрессо 'Джун-На-Стероидах' помог понять, что я уже почти Middle! Правда, кот дома теперь требует кофеиновые апдейты каждое утро.",
   },
   {
-    name: 'Игорь Смирнов',
-    stars: 5,
-    text: "Выпил американо 'Git-Push' — и внезапно отправил все домашки за семестр. Теперь преподаватель зовет меня на кофе чаще, чем друзей."
-  }
+    username: 'Игорь Смирнов',
+    rating: 5,
+    comment:
+      "Выпил американо 'Git-Push' — и внезапно отправил все домашки за семестр. Теперь преподаватель зовет меня на кофе чаще, чем друзей.",
+  },
 ]
+
+// --- РЕАЛЬНЫЕ ОТЗЫВЫ ИЗ БД ---
+const realReviews = ref([])
 const currentReview = ref(0)
 
+const allReviews = computed(() => {
+  const mappedReal = realReviews.value.map((r) => ({
+    id: r.id,
+    username: r.username,
+    rating: r.rating,
+    comment: r.comment,
+    created_at: r.created_at,
+  }))
+  
+  return [...mappedReal, ...staticReviews]
+})
+
+async function loadRealReviews() {
+  try {
+    const res = await api.get('/api/reviews')
+    realReviews.value = res.data || []
+  } catch (e) {
+    console.error('Failed to load real reviews', e)
+  }
+}
+
 function prevReview() {
-  currentReview.value = (currentReview.value - 1 + reviews.length) % reviews.length
+  if (allReviews.value.length === 0) return
+  currentReview.value =
+    (currentReview.value - 1 + allReviews.value.length) % allReviews.value.length
 }
 function nextReview() {
-  currentReview.value = (currentReview.value + 1) % reviews.length
+  if (allReviews.value.length === 0) return
+  currentReview.value = (currentReview.value + 1) % allReviews.value.length
 }
+
+onMounted(() => {
+  loadRealReviews()
+})
 </script>
 
 <style scoped>
 .carousel-item {
-  /* Скрывает неактивные элементы, важно для Vue-карусели! */
   display: none;
+  transition: opacity 0.6s ease-in-out;
+  opacity: 0;
 }
 .carousel-item.active {
   display: block;
+  opacity: 1;
 }
 .carousel-indicators .active {
   background-color: #222;
@@ -147,5 +198,11 @@ function nextReview() {
 .carousel-indicators button {
   background-color: #ddd;
   border: none;
+}
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: #000;
+  border-radius: 50%;
+  padding: 10px;
 }
 </style>

@@ -1,21 +1,15 @@
 <template>
   <div class="row py-3">
-    <!-- Панель поиска и сортировки -->
+    <!-- Панель поиска -->
     <div class="col-12 mb-3 d-flex gap-2">
-      <input
-        v-model="searchQuery"
-        type="text"
-        class="form-control"
-        placeholder="Поиск по группам и задачам..."
-      />
+      <input v-model="searchQuery" class="form-control" placeholder="Поиск по группам и задачам..." />
       <select v-model="sortOption" class="form-select" style="max-width: 200px;">
         <option value="date">По дате (новые сверху)</option>
         <option value="alpha">По алфавиту</option>
         <option value="unfinished">Невыполненные сверху</option>
       </select>
     </div>
-
-    <!-- Левая колонка: группы -->
+    <!-- Группы -->
     <div class="col-4 border-end">
       <h5 class="d-flex justify-content-between">
         Группы
@@ -23,12 +17,10 @@
           <i class="bi bi-plus-lg"></i>
         </button>
       </h5>
-
       <div v-if="addGroupVisible" class="input-group mb-2">
         <input v-model="newGroupTitle" type="text" class="form-control" placeholder="Название группы" @keyup.enter="addGroup" />
         <button class="btn btn-success" @click="addGroup"><i class="bi bi-check-lg"></i></button>
       </div>
-
       <ul class="list-group">
         <li
           v-for="group in filteredAndSortedGroups"
@@ -46,22 +38,19 @@
         </li>
       </ul>
     </div>
-
-    <!-- Правая колонка: задачи -->
+    <!-- Задачи -->
     <div class="col-8">
-      <template v-if="selectedGroup">
+      <template v-if="selectedGroupId">
         <h5 class="d-flex justify-content-between">
-          {{ selectedGroup.title }}
+          {{ selectedGroup ? selectedGroup.title : "-" }}
           <button class="btn btn-sm btn-primary" @click="addTaskVisible = !addTaskVisible">
             <i class="bi bi-plus-lg"></i>
           </button>
         </h5>
-
         <div v-if="addTaskVisible" class="input-group mb-2">
           <input v-model="newTaskTitle" type="text" class="form-control" placeholder="Название задачи" @keyup.enter="addTask" />
           <button class="btn btn-success" @click="addTask"><i class="bi bi-check-lg"></i></button>
         </div>
-
         <ul class="list-group">
           <li
             v-for="task in filteredAndSortedTasks"
@@ -79,136 +68,112 @@
           </li>
         </ul>
       </template>
-
-
-      <template v-else>
-      </template>
     </div>
   </div>
 </template>
+
 <script>
+import api from '../axios';
 
 export default {
   data() {
     return {
-      groups: JSON.parse(localStorage.getItem("todo-groups") || "[]"),
+      groups: [],
+      tasks: [],
       selectedGroupId: null,
       searchQuery: "",
       sortOption: "date",
-
       addGroupVisible: false,
       addTaskVisible: false,
-
       newGroupTitle: "",
       newTaskTitle: ""
-      
     };
   },
-
   computed: {
     selectedGroup() {
       return this.groups.find(g => g.id === this.selectedGroupId) || null;
     },
-
     filteredAndSortedGroups() {
       let output = [...this.groups];
-
       if (this.searchQuery.trim()) {
         const q = this.searchQuery.toLowerCase();
         output = output.filter(g => g.title.toLowerCase().includes(q));
       }
-
-      output = this.applySort(output, "group");
-      return output;
+      return this.applySort(output, "group");
     },
-
     filteredAndSortedTasks() {
-      if (!this.selectedGroup) return [];
-      let output = [...this.selectedGroup.tasks];
-
+      let output = [...this.tasks];
       if (this.searchQuery.trim()) {
         const q = this.searchQuery.toLowerCase();
         output = output.filter(t => t.title.toLowerCase().includes(q));
       }
-
-      output = this.applySort(output, "task");
-      return output;
+      return this.applySort(output, "task");
     }
   },
-
   methods: {
-    saveToStorage() {
-      localStorage.setItem("todo-groups", JSON.stringify(this.groups));
+    async fetchGroups() {
+      const res = await api.get("/api/groups");
+      this.groups = res.data;
+      if (!this.selectedGroupId && this.groups.length > 0) {
+        this.selectGroup(this.groups[0].id);
+      }
     },
-
-    selectGroup(id) {
+    async selectGroup(id) {
       this.selectedGroupId = id;
-      this.addTaskVisible = false;
+      await this.fetchTasks(id);
     },
-
-    addGroup() {
+    async fetchTasks(groupId) {
+      const res = await api.get(`/api/groups/${groupId}/tasks`);
+      this.tasks = res.data;
+    },
+    async addGroup() {
       if (!this.newGroupTitle.trim()) return;
-      this.groups.unshift({
-        id: Date.now(),
-        title: this.newGroupTitle.trim(),
-        tasks: []
-      });
+      await api.post("/api/groups", { title: this.newGroupTitle });
       this.newGroupTitle = "";
       this.addGroupVisible = false;
-      this.saveToStorage();
+      await this.fetchGroups();
     },
-
-    editGroup(group) {
+    async editGroup(group) {
       const newTitle = prompt("Введите новое название группы", group.title);
       if (newTitle && newTitle.trim()) {
-        group.title = newTitle.trim();
-        this.saveToStorage();
+        await api.put(`/api/groups/${group.id}`, { title: newTitle.trim() });
+        await this.fetchGroups();
       }
     },
-
-    deleteGroup(id) {
+    async deleteGroup(id) {
       if (confirm("Удалить группу?")) {
-        this.groups = this.groups.filter(g => g.id !== id);
+        await api.delete(`/api/groups/${id}`);
         if (this.selectedGroupId === id) this.selectedGroupId = null;
-        this.saveToStorage();
+        await this.fetchGroups();
       }
     },
-
-    addTask() {
-      if (!this.selectedGroup || !this.newTaskTitle.trim()) return;
-      this.selectedGroup.tasks.unshift({
-        id: Date.now(),
-        title: this.newTaskTitle.trim(),
-        done: false
-      });
+    async addTask() {
+      if (!this.selectedGroupId || !this.newTaskTitle.trim()) return;
+      await api.post(`/api/groups/${this.selectedGroupId}/tasks`, { title: this.newTaskTitle });
       this.newTaskTitle = "";
       this.addTaskVisible = false;
-      this.saveToStorage();
+      await this.fetchTasks(this.selectedGroupId);
     },
-
-    editTask(task) {
+    async editTask(task) {
       const newTitle = prompt("Введите новое название задачи", task.title);
       if (newTitle && newTitle.trim()) {
-        task.title = newTitle.trim();
-        this.saveToStorage();
+        await api.put(`/api/tasks/${task.id}`, { title: newTitle.trim() });
+        await this.fetchTasks(this.selectedGroupId);
       }
     },
-
-    toggleTask(id) {
-      const task = this.selectedGroup.tasks.find(t => t.id === id);
+    async toggleTask(id) {
+      const task = this.tasks.find(t => t.id === id);
       if (task) {
-        task.done = !task.done;
-        this.saveToStorage();
+        await api.put(`/api/tasks/${id}`, { done: !task.done });
+        await this.fetchTasks(this.selectedGroupId);
       }
     },
-
-    deleteTask(id) {
+    async deleteTask(id) {
       if (confirm("Удалить задачу?")) {
-        this.selectedGroup.tasks = this.selectedGroup.tasks.filter(t => t.id !== id);
-        this.saveToStorage();
+        await api.delete(`/api/tasks/${id}`);
+        await this.fetchTasks(this.selectedGroupId);
       }
     },
-
     applySort(list, type) {
       if (this.sortOption === "alpha") {
         return list.sort((a, b) => a.title.localeCompare(b.title));
@@ -216,12 +181,14 @@ export default {
       if (this.sortOption === "unfinished" && type === "task") {
         return list.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
       }
-      return list.sort((a, b) => b.id - a.id); 
+      return list.sort((a, b) => b.id - a.id);
     }
+  },
+  async mounted() {
+    await this.fetchGroups();
   }
 };
 </script>
-
 
 <style scoped>
 .list-group-item.active {

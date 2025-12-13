@@ -5,7 +5,7 @@
     <div class="row">
 
       <div class="col-md-4">
-        <a href="../assets/image/person-1.jpg" class="text-decoration-none text-dark">
+        <router-link class="text-decoration-none text-dark" :to="'/person/person-1'">
           <div class="card shadow rounded my-3 employee-card">
             <div class="card-body text-center">
               <div><img src="../assets/image/person-1.jpg" class="avatar"></div>
@@ -16,11 +16,11 @@
               </p>
             </div>
           </div>
-        </a>
+        </router-link>
       </div>
 
       <div class="col-md-4">
-        <router-link class="text-decoration-none text-dark" to="/person">
+        <router-link class="text-decoration-none text-dark" :to="'/person/person-2'">
           <div class="card shadow rounded my-3 employee-card">
             <div class="card-body text-center">
               <div><img src="../assets/image/person-2.jpg" class="avatar"></div>
@@ -35,7 +35,7 @@
       </div>
 
       <div class="col-md-4">
-        <a href="../assets/image/person-3.html" class="text-decoration-none text-dark">
+        <router-link class="text-decoration-none text-dark" :to="'/person/person-3'">
           <div class="card shadow rounded my-3 employee-card">
             <div class="card-body text-center">
               <div><img src="../assets/image/person-3.jpg" class="avatar"></div>
@@ -46,7 +46,7 @@
               </p>
             </div>
           </div>
-        </a>
+        </router-link>
       </div>
 
     </div>
