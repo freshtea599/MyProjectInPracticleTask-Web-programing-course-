@@ -58,10 +58,9 @@ type CartItem struct {
 	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
 	Quantity  int    `json:"quantity"`
-	// Поля ниже заполняются через JOIN (для фронтенда)
-	Name  string `json:"name"`
-	Image string `json:"image"`
-	Price int    `json:"price"`
+	Name      string `json:"name"`
+	Image     string `json:"image"`
+	Price     int    `json:"price"`
 }
 
 type Product struct {
@@ -84,8 +83,6 @@ type Review struct {
 	CreatedAt   string  `json:"created_at"`
 	ModeratedAt string  `json:"moderated_at,omitempty"`
 }
-
-// Запросы (DTO)
 
 type RegisterRequest struct {
 	Username string `json:"username"`
@@ -115,8 +112,7 @@ type UpdateTaskRequest struct {
 }
 
 type AddToCartRequest struct {
-	ProductID string `json:"product_id"` // ID продукта теперь UUID (строка)
-	// Name, Image, Price больше не нужны при добавлении, они берутся из БД
+	ProductID string `json:"product_id"`
 }
 
 type CreateReviewRequest struct {
@@ -129,7 +125,7 @@ type UpdateProfileRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Birthdate string `json:"birthdate"`
-	Gender    string `json:"gender"` // Оставляем string для совместимости с фронтом ("M"/"F")
+	Gender    string `json:"gender"`
 }
 
 type ProductRequest struct {
@@ -188,14 +184,12 @@ func main() {
 	e.Use(middleware.CORS())
 	e.Use(middleware.RequestID())
 
-	// Публичные маршруты
 	e.POST("/api/register", register)
 	e.POST("/api/login", login)
 	e.GET("/health", healthCheck)
 	e.GET("/api/products", getProducts)
 	e.GET("/api/reviews", getReviews)
 
-	// Защищённые маршруты
 	r := e.Group("/api")
 	r.Use(authMiddleware)
 
@@ -217,7 +211,6 @@ func main() {
 	r.POST("/cart", addToCart)
 	r.DELETE("/cart", clearCart)
 
-	// Админские маршруты
 	admin := e.Group("/api/admin")
 	admin.Use(authMiddleware)
 	admin.Use(adminMiddleware)
@@ -269,7 +262,6 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired token"})
 		}
 
-		// ВАЖНО: ID теперь строка, проверяем на пустоту
 		if claims.UserID == "" {
 			return c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid token claims"})
 		}
@@ -290,7 +282,7 @@ func adminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// ============ Handlers: Auth ============
+// ============ Авторизация ============
 
 func register(c echo.Context) error {
 	var req RegisterRequest
@@ -311,9 +303,8 @@ func register(c echo.Context) error {
 	}
 
 	profileTag := generateProfileTag()
-	var userID string // UUID
+	var userID string
 
-	// Вставляем is_admin = false
 	err = db.QueryRow(
 		`INSERT INTO users (username, password, profile_tag, is_admin) VALUES ($1, $2, $3, $4) RETURNING id`,
 		req.Username, string(hash), profileTag, false).Scan(&userID)
@@ -340,7 +331,6 @@ func login(c echo.Context) error {
 	}
 
 	var user User
-	// Получаем is_admin (bool)
 	err := db.QueryRow(
 		`SELECT id, password, is_admin FROM users WHERE username=$1`,
 		req.Username).Scan(&user.ID, &user.Password, &user.IsAdmin)
@@ -384,7 +374,7 @@ func createJWT(userID string, isAdmin bool) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
-// ============ Handlers: Profile ============
+// ============ Профили ============
 
 func getProfile(c echo.Context) error {
 	userID := c.Get("user_id").(string)
@@ -422,7 +412,6 @@ func updateProfile(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request format"})
 	}
 
-	// Валидация даты рождения
 	if req.Birthdate != "" {
 		if _, err := time.Parse("2006-01-02", req.Birthdate); err != nil {
 			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid birthdate format, use YYYY-MM-DD"})
@@ -465,7 +454,7 @@ func updateProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "profile updated successfully"})
 }
 
-// ============ Handlers: Groups ============
+// ============ Группы ============
 
 func getGroups(c echo.Context) error {
 	userID := c.Get("user_id").(string)
@@ -566,7 +555,7 @@ func deleteGroup(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// ============ Handlers: Tasks ============
+// ============ Таски ============
 
 func getTasksByGroup(c echo.Context) error {
 	groupID := c.Param("id")
@@ -678,7 +667,7 @@ func deleteTask(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// ============ Handlers: Cart ============
+// ============ Карты товаров ============
 
 func getCart(c echo.Context) error {
 	userID := c.Get("user_id").(string)
@@ -753,7 +742,7 @@ func clearCart(c echo.Context) error {
 	})
 }
 
-// ============ Handlers: Public & Admin Products ============
+// ============ Продукты ============
 
 func getProducts(c echo.Context) error {
 	rows, err := db.Query(
@@ -862,7 +851,7 @@ func deleteProduct(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// ============ Handlers: Reviews ============
+// ============ Отзывы ============
 
 func getReviews(c echo.Context) error {
 	rows, err := db.Query(`

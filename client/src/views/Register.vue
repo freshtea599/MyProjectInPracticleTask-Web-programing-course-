@@ -67,8 +67,8 @@ async function submit() {
     return
   }
 
-  if (password.value.length < 4) {
-    msg.value = 'Пароль должен быть не менее 4 символов'
+  if (password.value.length < 8) {
+    msg.value = 'Пароль должен быть не менее 8 символов'
     return
   }
 

@@ -11,15 +11,12 @@
 3. Установка сервера (Go + PostgreSQL)  
 4. Установка клиента (Vue 3 + Vite)  
 5. Запуск приложения  
-6. API документация  
-7. Развертывание в продакшене  
-8. Troubleshooting  
 
 ---
 
 ## 1. Введение
 
-**Айти кофейня** — полнофункциональное веб-приложение для управления магазином кофейных напитков, пользовательскими заметками и модерацией отзывов.
+**Айти кофейня** — полнофункциональное веб-приложение для управления магазином кофейных напитков, пользовательскими заметками и модерацией отзывов с добавлением товаров через систему администрирования.
 
 ### Архитектура проекта
 
@@ -56,7 +53,6 @@ cd server
 ### Шаг 2. Установка зависимостей
 
 ```bash
-go mod download
 go mod tidy
 ```
 
@@ -86,13 +82,13 @@ CREATE DATABASE aitikofeynya;
 ### Шаг 5. Применение схемы БД (лежит в папке сервера)
 
 ```bash
-psql -U postgres -d aitikofeynya -f schema.sql
+psql -U postgres -d aitikofeynya -f schema_final.sql
 ```
 
 ### Шаг 6. Файл `.env`
 
 ```env
-DATABASE_URL="postgres://postgres:_Vash_Porol_@localhost:5432/todolist?sslmode=disable"
+DATABASE_URL="postgres://postgres:_Vash_Porol_@localhost:5432/aitikofeynya?sslmode=disable"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production-min-32-chars"
 PORT=8080
 ```
@@ -105,7 +101,7 @@ openssl rand -base64 32
 ### Шаг 7. Назначение администратора
 
 ```sql
-UPDATE users SET role = 'admin' WHERE username = 'testuser';
+UPDATE users SET is_admin = true WHERE username = 'testuser';
 ```
 
 ### Шаг 8. Запуск сервера
@@ -147,7 +143,7 @@ npm run dev
 
 ---
 
-## 4. Запуск приложения
+## 5. Запуск приложения
 
 1. Запустить PostgreSQL  
 2. Сервер:
@@ -160,60 +156,5 @@ npm run dev
 ```
 4. Открыть: http://localhost:5173  
 
----
 
-## 6. API документация
-
-### Публичные эндпоинты
-
-**POST /api/register**
-```json
-{
-  "username": "newuser",
-  "password": "securePassword123"
-}
-```
-
-**POST /api/login**
-```json
-{
-  "username": "newuser",
-  "password": "securePassword123"
-}
-```
-
-### Защищенные эндпоинты
-
-Заголовок:
-```
-Authorization: Bearer <jwt>
-```
-
-**GET /api/profile**  
-**PUT /api/profile**  
-
-### Админские эндпоинты
-
-- `/api/admin/products`
-- `/api/admin/reviews`
-
----
-
-## 7. Продакшен
-
-Рекомендуется:
-- Nginx как reverse proxy  
-- HTTPS (Let's Encrypt)  
-- Переменные окружения  
-- Docker / docker-compose  
-
----
-
-## 8. Troubleshooting
-
-- Проверяйте `.env` файлы  
-- Убедитесь, что порты не заняты  
-- Проверяйте логи сервера  
-
----
 
