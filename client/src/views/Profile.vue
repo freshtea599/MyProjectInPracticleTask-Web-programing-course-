@@ -26,7 +26,6 @@
         <option value="">—</option>
         <option value="M">Мужской</option>
         <option value="F">Женский</option>
-        <option value="O">Другое</option>
       </select>
     </div>
     <div class="mb-3">
@@ -39,12 +38,12 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '../axios'
 
-// Профиль с дефолтными значениями, чтобы не было undefined/null
 const profile = ref({
   username: "",
   first_name: "",
   last_name: "",
   birthdate: "",
+  is_male: null,
   gender: "",
   profile_tag: ""
 })
@@ -71,13 +70,22 @@ const displayName = computed(() => {
 async function loadProfile() {
   try {
     const resp = await api.get('/api/profile')
-    // защитно присваиваем значения
     profile.value.first_name  = resp.data.first_name  || ""
     profile.value.last_name   = resp.data.last_name   || ""
     profile.value.birthdate   = resp.data.birthdate   || ""
-    profile.value.gender      = resp.data.gender      || ""
     profile.value.profile_tag = resp.data.profile_tag || ""
     profile.value.username    = resp.data.username    || ""
+    
+    profile.value.is_male = resp.data.is_male
+    
+    if (resp.data.is_male === true) {
+        profile.value.gender = "M"
+    } else if (resp.data.is_male === false) {
+        profile.value.gender = "F"
+    } else {
+        profile.value.gender = ""
+    }
+
     msg.value = ""
     msgType.value = "alert-success"
   } catch(e) {
@@ -96,9 +104,10 @@ async function save() {
     })
     msg.value = "Профиль обновлён!"
     msgType.value = "alert-success"
+    
     loadProfile()
   } catch(e) {
-    msg.value = "Ошибка сохранения"
+    msg.value = "Ошибка сохранения: " + (e.response?.data?.error || e.message)
     msgType.value = "alert-danger"
   }
 }

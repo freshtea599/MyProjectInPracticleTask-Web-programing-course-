@@ -5,7 +5,7 @@
     <p v-if="error" class="text-danger alert alert-danger">{{ error }}</p>
     <p v-if="success" class="text-success alert alert-success">{{ success }}</p>
 
-    <button class="btn btn-primary mb-3" @click="showForm = !showForm">
+    <button class="btn btn-primary mb-3" @click="toggleForm">
       {{ showForm ? '✕ Отмена' : '+ Добавить товар' }}
     </button>
 
@@ -49,6 +49,17 @@
             placeholder="https://..."
           />
         </div>
+        <!-- Чекбокс активности -->
+        <div class="mb-3 form-check">
+          <input
+            v-model="formData.is_active"
+            type="checkbox"
+            class="form-check-input"
+            id="activeCheck"
+          />
+          <label class="form-check-label" for="activeCheck">Товар активен (виден в каталоге)</label>
+        </div>
+        
         <button type="submit" class="btn btn-success" :disabled="loading">
           {{ loading ? 'Сохранение...' : 'Сохранить' }}
         </button>
@@ -78,10 +89,18 @@
       <tbody>
         <tr v-for="product in products" :key="product.id">
           <td>
-            <div>
-              <strong>{{ product.name }}</strong>
-              <br />
-              <small class="text-muted">{{ product.description }}</small>
+            <div class="d-flex align-items-center">
+              <img 
+                v-if="product.image_url" 
+                :src="product.image_url" 
+                alt="" 
+                style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px; border-radius: 4px;"
+              >
+              <div>
+                <strong>{{ product.name }}</strong>
+                <br />
+                <small class="text-muted">{{ product.description }}</small>
+              </div>
             </div>
           </td>
           <td>{{ product.price }} ₽</td>
@@ -125,12 +144,16 @@ const success = ref('')
 const loading = ref(false)
 const showForm = ref(false)
 const editingId = ref(null)
-const formData = ref({
+
+const initialForm = {
   name: '',
   description: '',
   price: 0,
   image_url: '',
-})
+  is_active: true,
+}
+
+const formData = ref({ ...initialForm })
 
 async function loadProducts() {
   loading.value = true
@@ -146,21 +169,27 @@ async function loadProducts() {
   }
 }
 
+function toggleForm() {
+    showForm.value = !showForm.value
+    if (!showForm.value) resetForm()
+}
+
 function resetForm() {
-  formData.value = {
-    name: '',
-    description: '',
-    price: 0,
-    image_url: '',
-  }
+  formData.value = { ...initialForm }
   editingId.value = null
   showForm.value = false
+  error.value = ''
+  success.value = ''
 }
 
 function editProduct(product) {
-  formData.value = { ...product }
+  formData.value = { 
+      ...product,
+      image_url: product.image_url || '' 
+  }
   editingId.value = product.id
   showForm.value = true
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 async function saveProduct() {
@@ -189,7 +218,7 @@ async function saveProduct() {
     await loadProducts()
     resetForm()
   } catch (e) {
-    error.value = 'Не удалось сохранить товар'
+    error.value = 'Не удалось сохранить товар: ' + (e.response?.data?.error || e.message)
     console.error(e)
   } finally {
     loading.value = false
@@ -197,7 +226,7 @@ async function saveProduct() {
 }
 
 async function deleteProduct(productId) {
-  if (!confirm('Вы уверены?')) return
+  if (!confirm('Вы уверены? Это действие необратимо.')) return
 
   error.value = ''
   loading.value = true

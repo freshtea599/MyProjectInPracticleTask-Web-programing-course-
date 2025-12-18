@@ -33,7 +33,7 @@ async function submit() {
       password: password.value,
     })
     localStorage.setItem('token', res.data.token)
-    localStorage.setItem('role', res.data.role)
+    localStorage.setItem('is_admin', res.data.is_admin)
     router.push('/profile')
   } catch (e) {
     msg.value = 'Неверный логин или пароль'

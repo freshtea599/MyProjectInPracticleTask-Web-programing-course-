@@ -34,11 +34,11 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
+  const is_admin = localStorage.getItem('is_admin')
 
   if (to.meta.requiresAuth && !token) {
     next('/login')
-  } else if (to.meta.requiresAdmin && role !== 'admin') {
+  } else if (to.meta.requiresAdmin && is_admin !== 'true') {
     next('/')
   } else {
     next()

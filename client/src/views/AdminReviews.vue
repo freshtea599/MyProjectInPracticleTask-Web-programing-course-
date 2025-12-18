@@ -56,65 +56,71 @@
               </span>
             </div>
           </div>
-          <div class="card-body">
-            <p>{{ review.comment }}</p>
-            <p class="mb-0">
-              <span
-                v-if="review.status === 'approved'"
-                class="text-success"
-              >
-                ✓ Одобрено
-              </span>
-              <span
-                v-else-if="review.status === 'rejected'"
-                class="text-danger"
-              >
-                ✗ Отклонено
-              </span>
-              <span
-                v-else
-                class="text-warning"
-              >
-                ⏳ Ожидает модерации
-              </span>
-            </p>
-          </div>
-          <div class="card-footer bg-light d-flex justify-content-between">
-            <div v-if="review.status === 'pending'">
-              <button
-                class="btn btn-sm btn-success"
-                @click="approveReview(review.id)"
-                :disabled="processing"
-              >
-                ✓ Одобрить
-              </button>
-              <button
-                class="btn btn-sm btn-danger ms-2"
-                @click="rejectReview(review.id)"
-                :disabled="processing"
-              >
-                ✗ Отклонить
-              </button>
+            <div class="card-body">
+              <p>{{ review.comment }}</p>
+              <p class="mb-0">
+                <span
+                  v-if="review.status === 'approved'"
+                  class="text-success"
+                >
+                  ✓ Одобрено
+                </span>
+                <span
+                  v-else-if="review.status === 'rejected'"
+                  class="text-danger"
+                >
+                  ✗ Отклонено
+                </span>
+                <span
+                  v-else
+                  class="text-warning"
+                >
+                  ⏳ Ожидает модерации
+                </span>
+              </p>
             </div>
-            <div
-              v-else-if="review.status === 'approved'"
-              class="ms-auto"
-            >
-              <button
-                class="btn btn-sm btn-outline-danger"
-                @click="deleteReview(review.id)"
-                :disabled="processing"
-              >
-                🗑 Удалить
-              </button>
+              <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+              <!-- Кнопки для PENDING -->
+              <div v-if="review.status === 'pending'">
+                <button
+                  class="btn btn-sm btn-success"
+                  @click="approveReview(review.id)"
+                  :disabled="processing"
+                >
+                  ✓
+                </button>
+                <button
+                  class="btn btn-sm btn-danger ms-2"
+                  @click="rejectReview(review.id)"
+                  :disabled="processing"
+                >
+                  ✗
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-secondary ms-2"
+                  @click="deleteReview(review.id)"
+                  :disabled="processing"
+                  title="Удалить спам"
+                >
+                  🗑
+                </button>
+              </div>
+
+              <!-- Кнопки для APPROVED / REJECTED -->
+              <div v-else class="ms-auto">
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  @click="deleteReview(review.id)"
+                  :disabled="processing"
+                >
+                  🗑 Удалить
+                </button>
+              </div>
             </div>
-            <div v-else>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 </template>
 
 <script setup>

@@ -7,31 +7,31 @@
       </p>
     </div>
 
-    <!-- Загрузка -->
-    <div v-if="allProducts.length === 0" class="text-center mt-5">
+    <div v-if="loading" class="text-center mt-5">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Загрузка...</span>
       </div>
     </div>
+    <div v-else-if="products.length === 0" class="alert alert-info text-center">
+      В данный момент товаров нет в наличии. Загляните позже!
+    </div>
 
-    <!-- Список товаров (только текущая страница) -->
     <div v-else>
       <div
         v-for="product in paginatedProducts"
-        :key="product.uniqueKey"
+        :key="product.id"
         class="card shadow rounded my-3"
       >
         <div class="card-body">
           <div class="row">
-            <div
-              class="col-md-2 text-center d-flex align-items-center justify-content-center"
-            >
+            <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
               <img
-                v-if="product.image"
-                :src="product.image"
+                v-if="product.image_url"
+                :src="product.image_url"
                 class="product-image rounded"
                 width="90"
                 style="max-height: 90px; object-fit: cover;"
+                alt="Product Image"
               />
               <div
                 v-else
@@ -41,12 +41,14 @@
                 <i class="bi bi-cup-hot text-muted" style="font-size: 2rem;"></i>
               </div>
             </div>
+            
             <div class="col-md-10 d-flex flex-column">
               <div class="product-name fw-bold fs-5">{{ product.name }}</div>
               <div class="product-description text-muted mb-2">
                 {{ product.description }}
               </div>
               <div class="flex-grow-1"></div>
+              
               <div class="d-flex justify-content-end align-items-center mt-2">
                 <div class="product-price me-3 fs-5">
                   Цена: <strong>{{ product.price }} р.</strong>
@@ -61,7 +63,6 @@
         </div>
       </div>
 
-      <!-- Пагинация -->
       <nav
         v-if="totalPages > 1"
         class="d-flex justify-content-center mt-4"
@@ -93,130 +94,62 @@
       </nav>
     </div>
 
-    <p v-if="error" class="text-danger text-center">{{ error }}</p>
+    <p v-if="error" class="text-danger text-center mt-3">{{ error }}</p>
   </main>
 </template>
 
 <script>
 import api from '../axios'
-import ingg1 from '../assets/image/coffe-capuccino.jpg'
-import ingg2 from '../assets/image/coffe-americano.png'
-import ingg3 from '../assets/image/coffe-esspreso.jpg'
-import ingg4 from '../assets/image/coffe-latte.jpg'
-import ingg5 from '../assets/image/coffe-lavanda.jpg'
-import ingg6 from '../assets/image/coffe-snickers.jpg'
 
 export default {
   data() {
     return {
+      products: [],
+      loading: false,
       error: '',
-      // Статичные товары
-      staticProducts: [
-        {
-          id: 101,
-          name: 'Быстрый-Скилл-Капучино',
-          image: ingg1,
-          price: 450,
-          description:
-            'Хочешь быстро вкачать какой-либо навык в айти? Бери этот божественный напиток и укажи в комментарие к заказу свое пожелание и уже с первого глотка ты прозреешь!',
-        },
-        {
-          id: 102,
-          name: 'Git-Push',
-          image: ingg2,
-          price: 350,
-          description:
-            'На тебе давно весят не выполненные таски? Не беда! Бери данный напиток и вся твоя работа будет доделана и запушена на гит. ПРЕДУПРЕЖДЕНИЕ!!! Git-Push американо действует раз в сутки, вторая кружка может вызвать не предвиденные баги в вашем коде!',
-        },
-        {
-          id: 103,
-          name: 'Джун-На-Стероидах',
-          image: ingg3,
-          price: 1050,
-          description:
-            'Это горькое месиво пьют только самые отчаянные сорви головы! Не мудрено, ведь именно этот напиток помогает встать на путь истинный... Ну и немного прибавляет к харизме!',
-        },
-        {
-          id: 104,
-          name: 'Bug-Fix',
-          image: ingg4,
-          price: 550,
-          description:
-            'Замучали баги? Есть решение! Смело бери Латте Bug-Fix и смотри как твориться магия! Твой код сам берет и исправляет все баги, тебе лишь остается закусить печенькой...',
-        },
-        {
-          id: 105,
-          name: 'Лаванда-Де-Вайбкодинг',
-          image: ingg5,
-          price: 10,
-          description:
-            'Что может быть хуже лавандового рафа на кокосовом молоке? Правильно, ничего! Ведь только самые отбитые программисты могут пить эту гадость, ну а мы что? Добавим немного чистого кода и код начнет писать сам себя... всё равно фу? Да, мы в курсе...',
-        },
-        {
-          id: 106,
-          name: 'Кайф-На-Удаленке',
-          image: ingg6,
-          price: 199,
-          description:
-            'Устал от работы в офисе? Всё проще чем кажется, три глотка раф сникерс и твой начальник уже сегодня тебя отпустить балдеть на удаленке!',
-        },
-      ],
-      // Товары из БД
-      dbProducts: [],
-      // Пагинация
       currentPage: 1,
       pageSize: 4,
     }
   },
   computed: {
-    allProducts() {
-      const staticList = this.staticProducts.map((p) => ({
-        ...p,
-        uniqueKey: `static-${p.id}`,
-      }))
-      const dbList = this.dbProducts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        price: p.price,
-        image: p.image_url,
-        uniqueKey: `db-${p.id}`,
-      }))
-      return [...staticList, ...dbList]
-    },
     totalPages() {
-      return Math.ceil(this.allProducts.length / this.pageSize) || 1
+      return Math.ceil(this.products.length / this.pageSize) || 1
     },
     paginatedProducts() {
       const start = (this.currentPage - 1) * this.pageSize
-      return this.allProducts.slice(start, start + this.pageSize)
+      return this.products.slice(start, start + this.pageSize)
     },
   },
   async mounted() {
-    await this.loadDbProducts()
+    await this.loadProducts()
   },
   methods: {
-    async loadDbProducts() {
+    async loadProducts() {
+      this.loading = true
+      this.error = ''
       try {
         const res = await api.get('/api/products')
-        this.dbProducts = res.data || []
+        this.products = res.data || []
       } catch (e) {
-        console.error('Ошибка загрузки товаров из БД', e)
+        this.error = 'Не удалось загрузить товары. Попробуйте позже.'
+        console.error('Ошибка загрузки товаров:', e)
+      } finally {
+        this.loading = false
       }
     },
     async addToCart(product) {
       this.error = ''
       try {
         await api.post('/api/cart', {
-          id: product.id,
-          name: product.name,
-          image: product.image || '',
-          price: product.price,
+          product_id: product.id,
         })
-        alert('Товар добавлен в корзину')
+        alert('Товар успешно добавлен в корзину!')
       } catch (e) {
-        this.error = 'Не удалось добавить в корзину'
-        console.error(e)
+        this.error = 'Не удалось добавить товар в корзину.'
+        console.error('Ошибка добавления в корзину:', e)
+        if (e.response && e.response.data && e.response.data.error) {
+             this.error = `Ошибка: ${e.response.data.error}`
+        }
       }
     },
     goToPage(page) {
@@ -258,9 +191,9 @@ export default {
 .pagination .page-link {
   padding: 0.4rem 0.6rem;
   font-size: 0.9rem;
+  cursor: pointer;
 }
 
-/* Мобильные (до 576px) */
 @media (max-width: 575.98px) {
   .card {
     margin: 1rem 0;
@@ -310,7 +243,6 @@ export default {
   }
 }
 
-/* Планшеты (576px - 768px) */
 @media (min-width: 576px) and (max-width: 767.98px) {
   .product-name {
     font-size: 1.1rem;
@@ -326,7 +258,6 @@ export default {
   }
 }
 
-/* Десктоп (768px и выше) */
 @media (min-width: 768px) {
   .product-name {
     font-size: 1.2rem;

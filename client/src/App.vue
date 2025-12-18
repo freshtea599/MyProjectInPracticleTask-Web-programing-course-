@@ -3,14 +3,22 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { ref, computed } from 'vue'
 
 const router = useRouter()
-const loggedIn = computed(() => !!localStorage.getItem('token'))
-const role = ref(localStorage.getItem('role') || 'user')
-const isAdmin = computed(() => role.value === 'admin')
 
+const loggedIn = computed(() => !!localStorage.getItem('token'))
+
+const isAdminStorage = ref(localStorage.getItem('is_admin')) 
+
+
+const isAdmin = computed(() => isAdminStorage.value === 'true')
 
 function logout() {
   localStorage.removeItem('token')
-  localStorage.removeItem('role')
+  localStorage.removeItem('user_id')
+  localStorage.removeItem('username')
+  localStorage.removeItem('is_admin') 
+ 
+  isAdminStorage.value = null
+  
   router.push('/login')
 }
 </script>
